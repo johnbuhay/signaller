@@ -1,0 +1,7 @@
+{
+    "[go]": {
+        "editor.insertSpaces": false,
+        "editor.tabSize": 8,
+        "editor.detectIndentation": false
+    },
+}
