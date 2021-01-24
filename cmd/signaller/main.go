@@ -1,0 +1,106 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+
+	"github.com/johnbuhay/signaller/pkg/signaller"
+	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+)
+
+var (
+	cfgFile string
+	rootCmd *cobra.Command
+)
+
+func init() {
+	rootCmd = &cobra.Command{
+		Use:   "signaller",
+		Short: "Detect a change and act",
+		Long:  ``,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx, cancelFunc := context.WithCancel(context.Background())
+
+			signalChan := make(chan os.Signal, 1)
+			go signalHandler(ctx, cancelFunc, signalChan)
+
+			c := make(map[string]interface{})
+			err := viper.Unmarshal(&c)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "unable to decode into struct, %v", err)
+				os.Exit(1)
+			}
+			you, err := signaller.New(c)
+			if err != nil {
+				return err
+			}
+			if err := you.Live(ctx); err != nil {
+				return err
+			}
+
+			cancelFunc()
+			return nil
+		},
+	}
+
+	cobra.OnInitialize(initConfig)
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.signaller.yaml)")
+	rootCmd.Version = Version
+	viper.BindEnv("DETECT.FILE")
+	viper.BindEnv("ACTION.PIDFILE")
+	viper.BindEnv("ACTION.SIGNAL")
+}
+
+func initConfig() {
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+	} else {
+		home, err := homedir.Dir()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
+		// Search config in home directory with name ".signaller" (without extension).
+		viper.AddConfigPath(home)
+		viper.SetConfigName(".signaller")
+	}
+
+	viper.SetEnvPrefix("SIGNALLER")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err == nil {
+		log.Println("Loaded config from", viper.ConfigFileUsed())
+	}
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func signalHandler(ctx context.Context, cancelFunc context.CancelFunc, signalChan chan os.Signal) {
+	defer close(signalChan)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case <-ctx.Done():
+		break
+	case s := <-signalChan:
+		if s != nil {
+			log.Println("Caught signal:", s)
+		}
+	}
+
+	cancelFunc()
+}

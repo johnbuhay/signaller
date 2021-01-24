@@ -2,7 +2,7 @@
 FROM golang AS builder
 WORKDIR /app
 COPY . /app
-RUN ls -lah; go build -o /signaller /app/cmd/signaller/...
+RUN go build -o /signaller /app/cmd/signaller/...
 
 FROM scratch
 ENTRYPOINT ["/signaller"]
