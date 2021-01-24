@@ -1,9 +1,9 @@
 # https://docs.docker.com/engine/reference/builder/
 FROM golang AS builder
 WORKDIR /app
-COPY . .
-RUN go build -o /tmp/signaller ./cmd/signaller/...
+COPY . /app
+RUN ls -lah; go build -o /signaller /app/cmd/signaller/...
 
 FROM scratch
-COPY --from=builder /tmp/signaller /bin/signaller
-ENTRYPOINT ["signaller"]
+ENTRYPOINT ["/signaller"]
+COPY --from=builder /signaller /signaller
