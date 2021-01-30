@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/johnbuhay/signaller/pkg/signaller/detect/file"
@@ -81,4 +82,42 @@ func (d *Detect) Watch(ctx context.Context, watcher *fsnotify.Watcher, actionCha
 	}
 	<-done
 	log.Println("The watch has ended...")
+}
+
+func (d *Detect) Poll(ctx context.Context, actionChan chan bool, interval int) {
+	done := make(chan bool)
+	go func() {
+	loop:
+		for {
+			select {
+			case <-ctx.Done():
+				actionChan <- false
+				done <- true
+				break loop
+			default:
+				changed, err := d.File.CompareChecksum()
+				if err != nil {
+					fmt.Fprintln(os.Stderr, err)
+					break loop
+				}
+				if changed {
+					c, _ := file.Checksum(d.File.Path())
+					log.Println("file modified:", d.File.Path(), c)
+					actionChan <- true
+
+					d.File, err = file.New(d.File.Path())
+					if err != nil {
+						fmt.Fprintln(os.Stderr, err)
+						break loop
+					}
+				}
+				time.Sleep(time.Duration(interval) * time.Second)
+			}
+		}
+		done <- true
+	}()
+
+	log.Printf("Polling %v with checksum %v every %v seconds\n", d.File.Path(), d.File.Checksum(), interval)
+	<-done
+	log.Println("Polling has ended...")
 }
