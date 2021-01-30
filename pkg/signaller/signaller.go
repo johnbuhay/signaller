@@ -30,7 +30,25 @@ func New(i interface{}) (*Config, error) {
 	}, nil
 }
 
-func (c *Config) Live(ctx context.Context) error {
+func (c *Config) Poll(ctx context.Context, interval int) error {
+	changed := make(chan bool)
+	go c.detect.Poll(ctx, changed, interval) // producer
+
+	action := func() error {
+		if err := c.action.SendSignal(); err != nil {
+			return err
+		}
+		return nil
+	}
+	if err := c.Repeat(ctx, action, changed); err != nil { // consumer
+		return err
+	}
+
+	log.Println("Closing Poll")
+	return nil
+}
+
+func (c *Config) Watch(ctx context.Context) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil
@@ -49,7 +67,7 @@ func (c *Config) Live(ctx context.Context) error {
 		return err
 	}
 
-	log.Println("Closing Live")
+	log.Println("Closing Watch")
 	return nil
 }
 

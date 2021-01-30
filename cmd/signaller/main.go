@@ -17,6 +17,7 @@ import (
 
 var (
 	cfgFile string
+	poll    int
 	rootCmd *cobra.Command
 )
 
@@ -48,8 +49,15 @@ func init() {
 			if err != nil {
 				return err
 			}
-			if err := you.Live(ctx); err != nil {
-				return err
+
+			if poll > 0 {
+				if err := you.Poll(ctx, poll); err != nil {
+					return err
+				}
+			} else {
+				if err := you.Watch(ctx); err != nil {
+					return err
+				}
 			}
 
 			cancelFunc()
@@ -59,6 +67,7 @@ func init() {
 
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.signaller.yaml)")
+	rootCmd.PersistentFlags().IntVar(&poll, "poll", 0, "to enable polling specify an interval greater than 0, in seconds")
 	rootCmd.Version = Version
 	err := viper.BindEnv("DETECT.FILE")
 	exitIfError(err)

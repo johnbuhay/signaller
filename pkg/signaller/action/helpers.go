@@ -2,7 +2,6 @@ package action
 
 import (
 	"errors"
-	"log"
 	"syscall"
 	"time"
 
@@ -12,12 +11,11 @@ import (
 
 func ValidatePIDFile(s string) (string, error) {
 	retries := 3 // maybe in the future i will parameterize this
-	for i := 0; i < retries; i++ {
-		timeout := time.Duration(i+1) * time.Second
-		log.Println(timeout)
+	for i := 0; i <= retries; i++ {
+		timeout := time.Duration(i) * time.Second
 		time.Sleep(timeout)
 		if err := file.Exists(s); err != nil {
-			if i == retries-1 {
+			if i == retries {
 				return "", err
 			}
 		} else {
