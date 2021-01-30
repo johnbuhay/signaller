@@ -39,7 +39,9 @@ func (a *Action) SendSignal() error {
 		return err
 	}
 
-	syscall.Kill(pid, a.signal)
+	if err := syscall.Kill(pid, a.signal); err != nil {
+		return err
+	}
 	log.Println("Sent signal:", unix.SignalName(a.signal))
 	return nil
 }
