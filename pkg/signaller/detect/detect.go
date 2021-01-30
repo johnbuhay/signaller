@@ -2,7 +2,9 @@ package detect
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/johnbuhay/signaller/pkg/signaller/detect/file"
@@ -22,7 +24,7 @@ func New(i interface{}) (*Detect, error) {
 	}, nil
 }
 
-func (d *Detect) Watch(ctx context.Context, watcher *fsnotify.Watcher, actionChan chan bool) error {
+func (d *Detect) Watch(ctx context.Context, watcher *fsnotify.Watcher, actionChan chan bool) {
 	defer watcher.Close()
 
 	done := make(chan bool)
@@ -74,9 +76,9 @@ func (d *Detect) Watch(ctx context.Context, watcher *fsnotify.Watcher, actionCha
 
 	log.Printf("Watching %v with checksum %v\n", d.File.Path(), d.File.Checksum())
 	if err := watcher.Add(d.File.Path()); err != nil {
-		return err
+		fmt.Fprintln(os.Stderr, err)
+		done <- true
 	}
 	<-done
 	log.Println("The watch has ended...")
-	return nil
 }

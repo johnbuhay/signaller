@@ -20,6 +20,13 @@ var (
 	rootCmd *cobra.Command
 )
 
+func exitIfError(e error) {
+	if e != nil {
+		fmt.Fprintln(os.Stderr, e)
+		os.Exit(1)
+	}
+}
+
 func init() {
 	rootCmd = &cobra.Command{
 		Use:   "signaller",
@@ -34,7 +41,7 @@ func init() {
 			c := make(map[string]interface{})
 			err := viper.Unmarshal(&c)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, "unable to decode into struct, %v", err)
+				fmt.Fprintln(os.Stderr, "unable to decode into struct,", err)
 				os.Exit(1)
 			}
 			you, err := signaller.New(c)
@@ -53,9 +60,14 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.signaller.yaml)")
 	rootCmd.Version = Version
-	viper.BindEnv("DETECT.FILE")
-	viper.BindEnv("ACTION.PIDFILE")
-	viper.BindEnv("ACTION.SIGNAL")
+	err := viper.BindEnv("DETECT.FILE")
+	exitIfError(err)
+
+	err = viper.BindEnv("ACTION.PIDFILE")
+	exitIfError(err)
+
+	err = viper.BindEnv("ACTION.SIGNAL")
+	exitIfError(err)
 }
 
 func initConfig() {
@@ -84,8 +96,7 @@ func initConfig() {
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		exitIfError(err)
 	}
 }
 
