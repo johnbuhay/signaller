@@ -2,17 +2,28 @@ package action
 
 import (
 	"errors"
+	"log"
 	"syscall"
+	"time"
 
 	"github.com/johnbuhay/signaller/pkg/signaller/detect/file"
 	"golang.org/x/sys/unix"
 )
 
 func ValidatePIDFile(s string) (string, error) {
-	if err := file.Exists(s); err != nil {
-		return "", err
+	retries := 3 // maybe in the future i will parameterize this
+	for i := 0; i < retries; i++ {
+		timeout := time.Duration(i+1) * time.Second
+		log.Println(timeout)
+		time.Sleep(timeout)
+		if err := file.Exists(s); err != nil {
+			if i == retries-1 {
+				return "", err
+			}
+		} else {
+			break
+		}
 	}
-
 	return s, nil
 }
 
