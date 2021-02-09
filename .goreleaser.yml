@@ -1,0 +1,54 @@
+# Make sure to check the documentation at http://goreleaser.com
+# https://goreleaser.com/customization/templates/
+# https://goreleaser.com/customization/build/#reproducible-builds
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod download
+    # you may remove this if you don't need go generate
+    # - go generate ./...
+builds:
+  - binary: signallee
+    env:
+      - CGO_ENABLED=0
+    id: signallee
+    main: ./cmd/signallee/
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+  - binary: signaller
+    env:
+      - CGO_ENABLED=0
+    id: signaller
+    ldflags:
+      - "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}}"
+    main: ./cmd/signaller/
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+archives:
+  - format: tar.gz
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+# snapshot:
+#   name_template: "{{ .Tag }}-rc"
+# signs:
+#   - artifacts: checksum
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

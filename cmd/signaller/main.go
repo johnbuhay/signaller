@@ -19,6 +19,10 @@ var (
 	cfgFile string
 	poll    int
 	rootCmd *cobra.Command
+	// these are populated by ldflags at build time
+	version string
+	commit  string
+	date    string
 )
 
 func exitIfError(e error) {
@@ -68,7 +72,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.signaller.yaml)")
 	rootCmd.PersistentFlags().IntVar(&poll, "poll", 0, "to enable polling specify an interval greater than 0, in seconds")
-	rootCmd.Version = Version
+	rootCmd.Version = version
 	err := viper.BindEnv("DETECT.FILE")
 	exitIfError(err)
 
