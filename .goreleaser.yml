@@ -3,10 +3,7 @@
 # https://goreleaser.com/customization/build/#reproducible-builds
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod download
-    # you may remove this if you don't need go generate
-    # - go generate ./...
 builds:
   - binary: signallee
     env:
@@ -19,6 +16,7 @@ builds:
     goarch:
       - amd64
       - arm64
+    mod_timestamp: '{{ .CommitTimestamp }}'
   - binary: signaller
     env:
       - CGO_ENABLED=0
@@ -32,13 +30,14 @@ builds:
     goarch:
       - amd64
       - arm64
+    mod_timestamp: '{{ .CommitTimestamp }}'
+
 archives:
   - format: tar.gz
     replacements:
       darwin: Darwin
       linux: Linux
       windows: Windows
-      386: i386
       amd64: x86_64
 checksum:
   name_template: 'checksums.txt'
@@ -52,3 +51,7 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+release:
+  github:
+    owner: johnbuhay
+    name: signaller

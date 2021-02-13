@@ -14,11 +14,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-const Version = "0.1.0"
-
 var (
 	cfgFile string
 	rootCmd *cobra.Command
+	// these are overriden by ldflags at build time
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+	builtBy = "unknown"
 )
 
 func init() {
@@ -51,7 +54,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $PWD/.signaller.yaml)")
 	viper.BindEnv("PIDFILE")
-	rootCmd.Version = Version
+	rootCmd.Version = version
 }
 
 func initConfig() {

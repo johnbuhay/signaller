@@ -19,10 +19,11 @@ var (
 	cfgFile string
 	poll    int
 	rootCmd *cobra.Command
-	// these are populated by ldflags at build time
-	version string
-	commit  string
-	date    string
+	// these are overriden by ldflags at build time
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+	builtBy = "unknown"
 )
 
 func exitIfError(e error) {
