@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -76,10 +77,17 @@ func (d *Detect) Watch(ctx context.Context, watcher *fsnotify.Watcher, actionCha
 	}()
 
 	log.Printf("Watching %v with checksum %v\n", d.File.Path(), d.File.Checksum())
-	if err := watcher.Add(d.File.Path()); err != nil {
+	fileToWatch, err := filepath.EvalSymlinks(d.File.Path())
+	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		done <- true
+	} else {
+		if err := watcher.Add(fileToWatch); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			done <- true
+		}
 	}
+
 	<-done
 	log.Println("The watch has ended...")
 }
