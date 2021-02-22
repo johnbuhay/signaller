@@ -1,0 +1,59 @@
+# Make sure to check the documentation at http://goreleaser.com
+before:
+  hooks:
+    - go mod download
+builds:
+  - &build
+    id: signaller
+    binary: signaller
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser 
+    main: ./cmd/signaller/main.go
+    mod_timestamp: '{{ .CommitTimestamp }}'
+  -
+    <<: *build
+    id: signallee
+    binary: signallee
+    main: ./cmd/signallee
+
+
+archives:
+  - &archive
+    id: signaller
+    builds: ["signaller"]
+    name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+  -
+    <<: *archive
+    id: signallee
+    builds: ["signallee"]
+
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-rc-{{.ShortCommit}}"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+release:
+  github:
+    owner: johnbuhay
+    name: signaller
