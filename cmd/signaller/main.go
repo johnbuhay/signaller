@@ -19,6 +19,7 @@ var (
 	cfgFile string
 	poll    int
 	rootCmd *cobra.Command
+  
 	// these are overriden by ldflags at build time
 	version = "dev"
 	commit  = "none"

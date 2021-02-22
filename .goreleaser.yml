@@ -5,46 +5,50 @@ before:
   hooks:
     - go mod download
 builds:
-  - binary: signallee
-    env:
-      - CGO_ENABLED=0
-    id: signallee
-    main: ./cmd/signallee/
-    goos:
-      - linux
-      - darwin
-    goarch:
-      - amd64
-      - arm64
-    mod_timestamp: '{{ .CommitTimestamp }}'
-  - binary: signaller
-    env:
-      - CGO_ENABLED=0
+  - &build
     id: signaller
-    ldflags:
-      - "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}}"
-    main: ./cmd/signaller/
+    binary: signaller
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
     goos:
       - linux
       - darwin
     goarch:
       - amd64
       - arm64
+    ldflags:
+      -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}} -X main.builtBy=goreleaser 
+    main: ./cmd/signaller/main.go
     mod_timestamp: '{{ .CommitTimestamp }}'
+  -
+    <<: *build
+    id: signallee
+    binary: signallee
+    main: ./cmd/signallee
+
 
 archives:
-  - format: tar.gz
+  - &archive
+    id: signaller
+    builds: ["signaller"]
+    name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
     replacements:
       darwin: Darwin
       linux: Linux
       windows: Windows
+      386: i386
       amd64: x86_64
+  -
+    <<: *archive
+    id: signallee
+    builds: ["signallee"]
+
 checksum:
   name_template: 'checksums.txt'
-# snapshot:
-#   name_template: "{{ .Tag }}-rc"
-# signs:
-#   - artifacts: checksum
+snapshot:
+  name_template: "{{ .Tag }}-rc-{{.ShortCommit}}"
 changelog:
   sort: asc
   filters:
