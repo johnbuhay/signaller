@@ -59,3 +59,23 @@ release:
   github:
     owner: johnbuhay
     name: signaller
+
+dockers:
+- image_templates:
+  - "jnbnyc/signaller:{{ .Version }}-amd64"
+  use_buildx: true
+  dockerfile: Dockerfile
+  build_flag_templates:
+  - "--platform=linux/amd64"
+- image_templates:
+  - "jnbnyc/signaller:{{ .Version }}-arm64"
+  use_buildx: true
+  goarch: arm64
+  dockerfile: Dockerfile
+  build_flag_templates:
+  - "--platform=linux/arm64"
+docker_manifests:
+- name_template: jnbnyc/signaller:{{ .Version }}
+  image_templates:
+  - jnbnyc/signaller:{{ .Version }}-amd64
+  - jnbnyc/signaller:{{ .Version }}-arm64
