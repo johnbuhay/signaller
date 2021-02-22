@@ -19,8 +19,8 @@ var (
 	cfgFile string
 	poll    int
 	rootCmd *cobra.Command
-
-	// these ldflags are set by an automated build process
+  
+	// these are overriden by ldflags at build time
 	version = "dev"
 	commit  = "none"
 	date    = "unknown"

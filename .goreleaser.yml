@@ -1,4 +1,6 @@
 # Make sure to check the documentation at http://goreleaser.com
+# https://goreleaser.com/customization/templates/
+# https://goreleaser.com/customization/build/#reproducible-builds
 before:
   hooks:
     - go mod download
