@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/johnbuhay/signaller/pkg/signaller/action"
@@ -58,17 +59,20 @@ func GetFile(item interface{}) (*File, error) {
 }
 
 func (c *Config) Poll(ctx context.Context, interval int) error {
-	done := make(chan bool)
+	var wg sync.WaitGroup
+
 	for _, file := range c.files {
-		go PollFile(ctx, file, interval)
+		wg.Add(1)
+		go PollFile(ctx, &wg, file, interval)
 	}
 
-	<-done
+	wg.Wait()
 	log.Println("Closing Poll")
 	return nil
 }
 
-func PollFile(ctx context.Context, file File, interval int) {
+func PollFile(ctx context.Context, wg *sync.WaitGroup, file File, interval int) {
+	defer wg.Done()
 	changed := make(chan bool)
 	go file.detect.Poll(ctx, changed, interval) // producer
 
@@ -86,17 +90,19 @@ func PollFile(ctx context.Context, file File, interval int) {
 }
 
 func (c *Config) Watch(ctx context.Context) error {
-	done := make(chan bool)
+	var wg sync.WaitGroup
 	for _, file := range c.files {
-		go WatchFile(ctx, file, done)
+		wg.Add(1)
+		go WatchFile(ctx, &wg, file)
 	}
 
-	<-done
+	wg.Wait()
 	log.Println("Closing Watch")
 	return nil
 }
 
-func WatchFile(ctx context.Context, file File, channel chan bool) {
+func WatchFile(ctx context.Context, wg *sync.WaitGroup, file File) {
+	defer wg.Done()
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Println("failed to allocate new watcher")
