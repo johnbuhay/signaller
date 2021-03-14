@@ -20,7 +20,7 @@ var (
 	poll    int
 	rootCmd *cobra.Command
 
-	// these are set` by ldflags at build time
+	// these are set by ldflags at build time
 	version = "dev"
 	commit  = "none"
 	date    = "unknown"
