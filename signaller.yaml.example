@@ -1,0 +1,8 @@
+---
+files:
+- path: /etc/ssl/certs/cert.crt
+  pidfile: /var/run/app.pid
+  signal: SIGUSR1
+- path: /etc/ssl/certs/cert.key
+  pidfile: /var/run/app.pid
+  signal: SIGQUIT
