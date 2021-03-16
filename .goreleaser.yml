@@ -66,7 +66,7 @@ docker_manifests:
 - name_template: jnbnyc/{{ .ProjectName }}:{{ .Version }}
   image_templates:
   - jnbnyc/{{ .ProjectName }}:{{ .Version }}-amd64
-  - jnbnyc/{{ .ProjectName }}:{{ .Version }}-arm64
+  - jnbnyc/{{ .ProjectName }}:{{ .Version }}-arm64v8
 
 dockers:
 - image_templates: ["jnbnyc/{{ .ProjectName }}:{{ .Version }}-amd64"]
