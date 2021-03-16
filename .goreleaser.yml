@@ -1,6 +1,7 @@
 # Make sure to check the documentation at http://goreleaser.com
 # https://goreleaser.com/customization/templates/
 # https://goreleaser.com/customization/build/#reproducible-builds
+project_name: signaller
 before:
   hooks:
     - go mod download
@@ -60,22 +61,38 @@ release:
     owner: johnbuhay
     name: signaller
 
+
+docker_manifests:
+- name_template: jnbnyc/{{ .ProjectName }}:{{ .Version }}
+  image_templates:
+  - jnbnyc/{{ .ProjectName }}:{{ .Version }}-amd64
+  - jnbnyc/{{ .ProjectName }}:{{ .Version }}-arm64
+
 dockers:
-- image_templates:
-  - "jnbnyc/signaller:{{ .Version }}-amd64"
+- image_templates: ["jnbnyc/{{ .ProjectName }}:{{ .Version }}-amd64"]
+  ids: [signaller]
   use_buildx: true
-  dockerfile: Dockerfile
+  dockerfile: cmd/signaller/Dockerfile
   build_flag_templates:
-  - "--platform=linux/amd64"
-- image_templates:
-  - "jnbnyc/signaller:{{ .Version }}-arm64"
+  - --platform=linux/amd64
+  - --label=org.opencontainers.image.title={{ .ProjectName }}
+  # - --label=org.opencontainers.image.description="Monitor a list of files and send a signal to a pid when they change"
+  - --label=org.opencontainers.image.source=https://github.com/johnbuhay/{{ .ProjectName }}
+  - --label=org.opencontainers.image.version={{ .Version }}
+  - --label=org.opencontainers.image.created={{ .CommitTimestamp }}
+  - --label=org.opencontainers.image.revision={{ .FullCommit }}
+  - --label=org.opencontainers.image.licenses=APACHE
+- image_templates: ["jnbnyc/{{ .ProjectName }}:{{ .Version }}-arm64v8"]
+  ids: [signaller]
   use_buildx: true
   goarch: arm64
-  dockerfile: Dockerfile
+  dockerfile: cmd/signaller/Dockerfile
   build_flag_templates:
-  - "--platform=linux/arm64"
-docker_manifests:
-- name_template: jnbnyc/signaller:{{ .Version }}
-  image_templates:
-  - jnbnyc/signaller:{{ .Version }}-amd64
-  - jnbnyc/signaller:{{ .Version }}-arm64
+  - --platform=linux/arm64/v8
+  - --label=org.opencontainers.image.title={{ .ProjectName }}
+  - --label=org.opencontainers.image.description="Monitor a list of files and send a signal to a pid when they change"
+  - --label=org.opencontainers.image.source=https://github.com/johnbuhay/{{ .ProjectName }}
+  - --label=org.opencontainers.image.version={{ .Version }}
+  - --label=org.opencontainers.image.created={{ .CommitTimestamp }}
+  - --label=org.opencontainers.image.revision={{ .FullCommit }}
+  - --label=org.opencontainers.image.licenses=APACHE
